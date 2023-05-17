@@ -1,0 +1,66 @@
+<!-- This is the generated HTML sent from the server -->
+<form method="GET" action="/users/logoutUser">
+  <button type="submit">Logout</button>
+</form>
+
+<form method="GET" action="/posts/createPost">
+  <button type="submit">Create a post</button>
+</form>
+
+<% posts.forEach(post => { %>
+  <h6><%= post._id %></h6>
+  <h4><%= post.title %></h4>
+  <p><%= post.caption %></p>
+  <h5>Owner: <%= post.author %></h5>
+  <img src="<%= post.picture.url %>" alt="postpicture">
+
+  <form method="POST" action="/likes/<%= post._id %>">
+    <button type="submit">Like</button>
+  </form>
+
+  <% post.likes?.forEach(like => { %>
+    <p>Likes: <%= like?._id %></p>
+  <% }); %>
+
+  <p>liked by <%= post.likes.length %></p>
+
+  <form id="commentform-<%= post._id %>">
+    <label for="comment-input-<%= post._id %>">Enter your comment:</label>
+    <input type="text" id="comment-input-<%= post._id %>" name="comment" value="<%= typeof name != 'undefined' ? comment : '' %>">
+    <button type="submit">Submit</button>
+  </form>
+
+  <% post.comments?.forEach(comment => { %>
+    <p>Comment: <%= comment.text %></p>
+    <p>Comment ID: <%= comment._id %></p>
+    <hr/>
+  <% }); %>
+
+  <p>Comments: <%= post.comments.length %></p>
+  <hr/>
+
+<% }); %>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.1/socket.io.js"></script>
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    const socket = io();
+
+    function emitNewComment(postId, comment) {
+      console.log('Post ID:', postId);
+      console.log('Comment:', comment);
+      socket.emit('newComment', { postId, comment });
+    }
+
+    const forms = document.querySelectorAll('form[id^="commentform-"]');
+    forms.forEach(form => {
+      const commentInput = form.querySelector('input[name="comment"]');
+      const postId = form.id.split('-')[1];
+      form.addEventListener('submit', event => {
+        event.preventDefault();
+        const comment = commentInput.value;
+        emitNewComment(postId, comment);
+      });
+    });
+  });
+</script>
