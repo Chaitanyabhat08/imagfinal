@@ -1,8 +1,27 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.1/socket.io.js"></script>
+<script>
+  import {io} from 'socket.io-client';  
+  const form = document.getElementById('mainform');
+  const socket = io();
+  form.addEventListener('submit', (event) => {
+    console.log('submitted');
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const postData = {
+      title: formData.get('title'),
+      caption: formData.get('caption'),
+      image: formData.get('image')
+    };
+    socket.emit('newPost', postData);
+    form.reset();
+  });
+</script>
+
 <div class="row mt-5">
   <div class="col-md-6 m-auto">
     <div class="card card-body">
       <h1 class="text-center mb-3"><i class="fas fa-sign-in-alt"></i> Create your post</h1>
-        <form id="form" method="POST" action="/posts/create"  enctype="multipart/form-data">
+        <form id="mainform" action="/posts/create" method="POST"   enctype="multipart/form-data">
           <hr/>
           <div class="form-group">
             <label for="title">Title</label>
@@ -16,7 +35,25 @@
             <hr/>
             <div class="form-group">
               <label for="image">Select an image:</label>
-              <input type="file" id="image" name="image">
+              <input type="file" id="image" name="image" onchange="previewImage()">
+              <img id="imagePreview" src="" alt="imagepreview" />
+              <script>
+                function previewImage() {
+                  const preview = document.getElementById('imagePreview');
+                  const file = document.getElementById('image').files[0];
+                  const reader = new FileReader();
+
+                  reader.onloadend = function () {
+                    preview.src = reader.result;
+                  }
+
+                  if (file) {
+                    reader.readAsDataURL(file);
+                  } else {
+                    preview.src = "";
+                  }
+                }
+              </script>
               </div>
               <hr/>
           <button type="submit" class="btn btn-primary btn-block">Submit</button>
@@ -24,12 +61,11 @@
     </div>
   </div>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.1/socket.io.js"></script>
 
-<script>
-  const socket = io();
+<!-- <script>
 
-  const postForm = document.getElementById('form');
+
+  const postForm = document.getElementById('mainform');
   postForm?.addEventListener('submit', (event) => {
     event.preventDefault();
 
@@ -47,4 +83,4 @@
     const url = `/posts/allposts?token=${encodeURIComponent(token)}`;
     window.location.href = url;
   });
-</script>
+</script>  -->

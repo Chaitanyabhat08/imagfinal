@@ -2,19 +2,18 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const passport = require('passport');
-const socketIO = require('socket.io');
+// const socketIO = require('socket.io);
 const http = require('http');
 const dotenv = require('dotenv');
 const connect = require('./config/database');
 const connectDatabase = require('./config/database');
 const cloudinary = require('cloudinary');
 dotenv.config({ path: '../config/.env' });
-const Post = require('../chaish/models/post');
-
+const Post = require('./models/post');
 
 const app = express();
 const server = http.createServer(app); // Create an HTTP server
-const io = socketIO(server); // Pass the server instance to Socket.io
+// const io = socketIO(server); // Pass the server instance to Socket.io
 
 const setupSwagger = require('./swagger');
 
@@ -41,32 +40,57 @@ app.use("/users", user);
 app.use("/posts", posts);
 app.use("/comments", comments);
 app.use("/likes", likes);
-
+app.use(function (req, res, next) {
+  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:8080');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  next();
+});
+const io = require("socket.io")(3000, {
+  cors: {
+    origin: "http://localhost:8080",
+    methods: ["GET", "POST"],
+  }
+});
 io.on('connection', (socket) => {
   console.log('A user connected', socket.id);
-  socket.on('newComment', async ({ postId, comment }) => {
+  socket.on('newComment', async(postId, comment )  => {
     try {
       const post = await Post.findById(postId);
       console.log('New comment received:', postId, comment);
-      post.comments.push({ text: comment , post: postId});
+      post.comments.push({ text: comment, post: postId });
       await post.save();
-      
-      socket.broadcast.emit('newComment', { postId, comment });
-
+      io.emit("commented", postId, comment)
+      //socket.broadcast.emit('commented', { postId, comment });
     } catch (error) {
       console.error('Error saving comment:', error);
     }
   });
 
-  socket.on('newPost', (postData) => {
-    console.log('New post received:', postData);
-    socket.broadcast.emit('newPost', postData);
+  socket.on('newPost', async (postData) => {
+    try {
+      console.log('New post received:', postData);
+      const post = new Post({
+        title: postData.title,
+        caption: postData.caption,
+        image: postData.image
+      });
+      await post.save();
+      socket.broadcast.emit('newPost', post);
+    } catch (error) {
+      console.error('Error saving post:', error);
+    }
   });
 
   socket.on('disconnect', () => {
     console.log('A user disconnected');
   });
 });
+// io.on('connection', (socket) => {
+//   console.log('A user connected', socket.id);
+
+// });
 setupSwagger(app);
 process.on('uncaughtException', err => {
   console.log("Error: " + err.message);
@@ -75,8 +99,8 @@ process.on('uncaughtException', err => {
     process.exit(1);
   });
 });
-server.listen(3000, () => {
-  console.log('Server is running on port 3000');
+server.listen(8080, () => {
+  console.log('Server is running on port 8080');
 });
 
 //Handling uncaught exceptions
@@ -89,3 +113,13 @@ cloudinary.config({
 })
 connectDatabase();
 module.exports = app;
+
+// app.route('/example')
+//   .get((req, res) => {
+//     // logic for handling GET request
+//     res.send('This is a GET request')
+//   })
+//   .post((req, res) => {
+//     // logic for handling POST request
+//     res.send('This is a POST request')
+//   })

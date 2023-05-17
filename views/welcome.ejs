@@ -9,10 +9,16 @@
     </div>
   </div>
 </div>
-
+  <label id = 'message-container'></label>
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.1/socket.io.js"></script>
-
-<script>
-  const socket = io();
-  socket.emit('connection', 'Connected to the server');
+<script type="text/javascript">
+  function displayMessage(message) {
+      const messageContainer = document.getElementById('message-container');
+      messageContainer.innerHTML = message;
+    }
+const socket = io('http://localhost:3000');
+socket.on('connect', ()=>{
+  displayMessage('Connected with the id  ' + socket.id);
+})
 </script>
