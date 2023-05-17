@@ -7,7 +7,7 @@
       </div>
       <label id='message-container'></label>
       </div>
-        <form id="mainform" action="/posts/create" method="POST" enctype="multipart/form-data">
+        <form id="mainform" enctype="multipart/form-data">
           <hr/>
           <div class="form-group">
             <label for="title">Title</label>
@@ -53,44 +53,26 @@
     const messageContainer = document.getElementById('message-container');
     messageContainer.innerHTML = message;
   }
-  const form = document.getElementById('mainform');
   const socket = io('http://localhost:3000');
+  const form = document.getElementById('mainform');
   form.addEventListener('submit', (event) => {
-    console.log('submitted');
-    event.preventDefault();
-    const formData = new FormData(event.target);
+    const formData = new FormData(form); // create a new FormData object from the form
     const postData = {
-      title: formData.get('title'),
-      caption: formData.get('caption'),
-      image: formData.get('image')
+      title: formData.get('title'), // get the value of the 'title' field
+      caption: formData.get('caption'), // get the value of the 'caption' field
+      image: formData.get('image') // get the selected image file
     };
-    socket.emit('newPost', postData);
+    // send the data to the server via the form action
+    fetch('/posts/create', {
+      method: 'POST',
+      body: formData
+    }).then(socket.emit('newPost', postData));
     socket.on('new-post', (postData) => {
-      displayMessage(postData);
+      displayMessage(postData.title);
     });
     form.reset();
-  });
-</script>
-
-<!-- <script>
-
-
-  const postForm = document.getElementById('mainform');
-  postForm?.addEventListener('submit', (event) => {
-    event.preventDefault();
-
-    const title = document.getElementById('title').value;
-    const caption = document.getElementById('caption').value;
-
-    const postData = {
-      title,
-      caption
-    };
-
-    socket.emit('newPost', postData);
-
     const token = localStorage.getItem('token');
     const url = `/posts/allposts?token=${encodeURIComponent(token)}`;
     window.location.href = url;
   });
-</script>  -->
+</script>

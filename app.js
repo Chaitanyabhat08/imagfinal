@@ -1,7 +1,7 @@
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
-const passport = require('passport');
+
 // const socketIO = require('socket.io);
 const http = require('http');
 const dotenv = require('dotenv');
@@ -9,6 +9,8 @@ const connect = require('./config/database');
 const connectDatabase = require('./config/database');
 const cloudinary = require('cloudinary');
 dotenv.config({ path: '../config/.env' });
+const passport = require('passport');
+require("./config/passportConfig")(passport);
 const Post = require('./models/post');
 
 const app = express();
@@ -55,7 +57,7 @@ const io = require("socket.io")(3000, {
 });
 io.on('connection', (socket) => {
   console.log('A user connected', socket.id);
-  socket.on('newComment', async(postId, comment )  => {
+  socket.on('newComment' , async(postId, comment )  => {
     console.log('New comment received:', postId, comment);
     const commentTobestored = {
       text: comment,
@@ -66,12 +68,10 @@ io.on('connection', (socket) => {
     console.log(err);
     })
   });
-
   socket.on('newPost', (postData) => {
-      console.log('New post received:', postData);
-      io.emit("new-post", postData)
+    console.log("new post received "+ postData)
+    io.emit("new-post", postData)
   });
-
   socket.on('disconnect', () => {
     console.log('A user disconnected');
   });

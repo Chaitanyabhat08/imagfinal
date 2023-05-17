@@ -50,6 +50,7 @@
       commentsCount.innerHTML = `Comments: ${parseInt(commentsCount.innerHTML.split(' ')[1]) + 1}`;
     }
     const socket = io('http://localhost:3000');
+    
     const commentForms = document.querySelectorAll('form[id^="commentform"]');
     commentForms.forEach(form => {
       form.addEventListener('submit', event => {
