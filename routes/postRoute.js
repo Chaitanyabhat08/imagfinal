@@ -44,6 +44,7 @@ const upload = multer({
 router.post('/create', passport.authenticate('jwt', { session: false }), upload.single('image'), async (req, res) => {
   const file = req.file;
   const user = req.user;
+  console.log("hey its getting called");
   const newPost = await Post.create({
     title: req.body.title,
     caption: req.body.caption,

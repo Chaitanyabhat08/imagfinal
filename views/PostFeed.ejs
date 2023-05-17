@@ -5,9 +5,6 @@
 <form method="GET" action="/posts/createPost">
   <button type="submit">Create a post</button>
 </form>
-</div>
-<label id='message-container'></label>
-</div>
 <% posts.forEach(post => { %>
   <h6><%= post._id %></h6>
   <h4><%= post.title %></h4>
@@ -25,27 +22,38 @@
 
   <p>liked by <%= post.likes.length %></p>
 
-<form id="commentform-<%= post._id %>" data-post="<%= post._id %>">
+<form id="commentform-<%= post._id %>" data-post="<%= post._id %>" >
   <label for="comment-input-<%= post._id %>">Enter your comment:</label>
   <input type="text" id="comment-input-<%= post._id %>" name="comment"
     value="<%= typeof name != 'undefined' ? comment : '' %>">
   <button type="submit">Submit</button>
 </form>
   <% post.comments?.forEach(comment => { %>
-    <p>Comment: <%= comment.text %></p>
-    <p>Comment ID: <%= comment._id %></p>
+    <div id="message-container-<%= post._id %>">
+      <p>Comment: <%= comment.text %>
+      </p>
+      <p>Comment ID: <%= comment._id %>
+      </p>
+      </div>
+
     <hr/>
   <% }); %>
-
-  <p>Comments: <%= post.comments.length %></p>
+  <p id="comment-count-<%= post._id %>">Comments: <%= post.comments.length %></p>
   <hr/>
 <% }); %>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.1/socket.io.js"></script>
 <script type="text/javascript">
-  function displayMessage(message) {
-    const messageContainer = document.getElementById('message-container');
-    messageContainer.innerHTML = message;
-  }
+  function displayMessage(postId, comment) {
+    console.log("thsi"+ postId, 'thiss'+comment);
+      const messageContainer = document.getElementById(`message-container-${postId}`);
+      console.log(messageContainer)
+      messageContainer.innerHTML += `
+    <p>Comment: ${comment.text}</p>
+    <p>Comment ID: ${comment._id}</p>
+    `;
+      const commentsCount = document.getElementById(`comments-count-${postId}`);
+      commentsCount.innerHTML = `Comments: ${commentsCount.innerHTML.split(' ')[1] + 1}`;
+    }
    const socket = io('http://localhost:3000');
     const commentForms = document.querySelectorAll('form[id^="commentform"]');
       commentForms.forEach(form => {
@@ -58,9 +66,9 @@
           commentInput.value = ''; // Clear comment input after submitting
         });
       });
-
-      socket.on('commented', (postId, comment) => {
-        displayMessage('Commented  ' + comment + " on " + postId);
-      });
+        socket.on('commented', (postId, comment) => {
+            console.log('New comment brooooo:', postId, comment);
+            displayMessage(postId, comment);
+          });
 </script>
 

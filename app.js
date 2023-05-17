@@ -56,31 +56,20 @@ const io = require("socket.io")(3000, {
 io.on('connection', (socket) => {
   console.log('A user connected', socket.id);
   socket.on('newComment', async(postId, comment )  => {
-    try {
-      const post = await Post.findById(postId);
-      console.log('New comment received:', postId, comment);
-      post.comments.push({ text: comment, post: postId });
-      await post.save();
-      io.emit("commented", postId, comment)
-      //socket.broadcast.emit('commented', { postId, comment });
-    } catch (error) {
-      console.error('Error saving comment:', error);
-    }
+    console.log('New comment received:', postId, comment);
+    const commentTobestored = {
+      text: comment,
+    };
+    const post = await Post.findById(postId);
+    post.comments.push(commentTobestored);
+    await post.save().then(io.emit("commented", postId, comment)).catch((err) => {
+    console.log(err);
+    })
   });
 
-  socket.on('newPost', async (postData) => {
-    try {
+  socket.on('newPost', (postData) => {
       console.log('New post received:', postData);
-      const post = new Post({
-        title: postData.title,
-        caption: postData.caption,
-        image: postData.image
-      });
-      await post.save();
-      socket.broadcast.emit('newPost', post);
-    } catch (error) {
-      console.error('Error saving post:', error);
-    }
+      io.emit("new-post", postData)
   });
 
   socket.on('disconnect', () => {
