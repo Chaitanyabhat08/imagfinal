@@ -41,25 +41,36 @@ const upload = multer({
 });
 
 router.post('/create', passport.authenticate('jwt', { session: false }), upload.single('image'), async (req, res) => {
-  const file = req.file;
-  const user = req.user;
-  console.log("hey its getting called");
-  const newPost = await Post.create({
-    title: req.body.title,
-    caption: req.body.caption,
-    picture: {
-      public_id: file.originalname,
-      url: file.location,
-    },
-    author: user._id, // the _id of the author User document
-    likes: [],
-    comments: [],
-  });
+  try {
+    const file = req.file;
+    const user = req.user;
 
-  let token = user.tokens[user.tokens.length - 1].token;
-  token = `Bearer ${token}`;
-  let url = `/posts/allposts?token=${encodeURIComponent(token)}`;
-  res.redirect(url);
+    if (!file || !file.originalname) {
+      throw new Error('No file or originalname property found');
+    }
+
+    const newPost = await Post.create({
+      title: req.body.title,
+      caption: req.body.caption,
+      picture: {
+        public_id: file.originalname,
+        url: file.location,
+      },
+      author: user._id, // the _id of the author User document
+      likes: [],
+      comments: [],
+    });
+
+    let token = user.tokens[user.tokens.length - 1].token;
+    token = `Bearer ${token}`;
+    let url = `/posts/allposts?token=${encodeURIComponent(token)}`;
+    res.status(200).json({ url: url });
+
+  } catch (error) {
+    console.error(error);
+    // Handle the error and send an appropriate response
+    res.status(500).json({ error: 'Error creating post' });
+  }
 });
 router.get('/createPost', passport.authenticate('jwt', { session: false }), (req, res) => {
   const token = req.headers.Authorization;

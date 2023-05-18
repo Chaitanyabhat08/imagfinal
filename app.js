@@ -69,17 +69,13 @@ io.on('connection', (socket) => {
     })
   });
   socket.on('newPost', (postData) => {
-    console.log("new post received "+ postData)
-    io.emit("new-post", postData)
+    console.log("heyyyyyyyyyyy", postData);
+    io.emit('new-post', postData);
   });
   socket.on('disconnect', () => {
     console.log('A user disconnected');
   });
 });
-// io.on('connection', (socket) => {
-//   console.log('A user connected', socket.id);
-
-// });
 setupSwagger(app);
 process.on('uncaughtException', err => {
   console.log("Error: " + err.message);
