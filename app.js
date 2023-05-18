@@ -68,9 +68,9 @@ io.on('connection', (socket) => {
     console.log(err);
     })
   });
-  socket.on('newPost', (postData) => {
-    console.log("heyyyyyyyyyyy", postData);
-    io.emit('new-post', postData);
+  socket.on('newPost', (formData) => {
+    console.log("New post reeceived brrroro", formData);
+    io.emit('new-post', formData);
   });
   socket.on('disconnect', () => {
     console.log('A user disconnected');

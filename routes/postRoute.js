@@ -64,7 +64,7 @@ router.post('/create', passport.authenticate('jwt', { session: false }), upload.
     let token = user.tokens[user.tokens.length - 1].token;
     token = `Bearer ${token}`;
     let url = `/posts/allposts?token=${encodeURIComponent(token)}`;
-    res.status(200).json({ url: url });
+    res.status(200).send({ url: url });
 
   } catch (error) {
     console.error(error);

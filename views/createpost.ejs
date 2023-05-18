@@ -91,21 +91,15 @@ window.location.href = url;
     </div>
     <form id="mainform" enctype="multipart/form-data">
       <hr />
-      <div class="form-group">
         <label for="title">Title</label>
         <input type="text" id="title" name="title" class="form-control" placeholder="Enter Title" />
-      </div>
       <hr />
-      <div class="form-group">
         <label for="caption">Caption</label>
         <input type="text" id="caption" name="caption" class="form-control" placeholder="Enter Caption" />
-      </div>
       <hr />
-      <div class="form-group">
         <label for="image">Select an image:</label>
         <input type="file" id="image" name="image" onchange="previewImage()">
         <img id="imagePreview" src="" alt="imagepreview" />
-      </div>
       <hr />
       <button type="submit" class="btn btn-primary btn-block">Submit</button>
     </form>
@@ -118,54 +112,42 @@ window.location.href = url;
     const messageContainer = document.getElementById('message-container');
     messageContainer.textContent = message;
   }
+   function previewImage() {
+      const preview = document.getElementById('imagePreview');
+      const file = document.getElementById('image').files[0];
+      const reader = new FileReader();
 
-  const socket = io(); // Connect to the current host
-  const form = document.getElementById('mainform');
+      reader.onloadend = function () {
+        preview.src = reader.result;
+      };
+      if (file) {
+        reader.readAsDataURL(file);
+      } else {
+        preview.src = '';
+      }
+    }
+ const socket = io('http://localhost:3000'); // Connect to the current host
+ const form = document.getElementById('mainform');
   form.addEventListener('submit', async (event) => {
-    event.preventDefault();
-
-    const formData = new FormData(form);
-
     try {
+      const formData = new FormData(form);
+      socket.emit('newPost', formData);
       const response = await fetch('/posts/create', {
         method: 'POST',
         body: formData
       });
-
-      if (response.ok) {
-        const postData = await response.json();
-        console.log(postData);
-        socket.emit('newPost', postData);
-        displayMessage(postData.title);
-        form.reset();
-        const token = localStorage.getItem('token');
-        const url = `/posts/allposts?token=${encodeURIComponent(token)}`;
-        window.location.href = url;
-      } else {
-        throw new Error('Error creating post');
+      if(response.status == 200){
+        window.location.href = '/posts/allposts';
       }
     } catch (error) {
       console.error(error);
+      // Handle the error and send an appropriate response
+      res.status(500).json({ error: 'Error creating post' });
     }
   });
-
-  socket.on('connect', () => {
+  socket.on('new-post', (postData) => {
+    displayMessage(postData.title);
     console.log('Socket connected');
   });
-
-  function previewImage() {
-    const preview = document.getElementById('imagePreview');
-    const file = document.getElementById('image').files[0];
-    const reader = new FileReader();
-
-    reader.onloadend = function () {
-      preview.src = reader.result;
-    };
-
-    if (file) {
-      reader.readAsDataURL(file);
-    } else {
-      preview.src = '';
-    }
-  }
+  form.reset();
 </script>
